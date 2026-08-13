@@ -82,8 +82,12 @@ skipped = durationMs > 0 && listenedMs < 0.7 * durationMs
 ```
 
 ### Duplicate metadata guard
-YT Music fires `onMetadataChanged` multiple times per track.
-Guard: if `title + artist` matches the current `ActivePlay`, the event is ignored.
+YT Music fires `onMetadataChanged` multiple times per track. The first event often
+carries `durationMs = 0`; the real duration arrives on the second event.
+
+Guard: if `title + artist` matches the current `ActivePlay`, the full reset is skipped.
+However, `durationMs` is updated if the new event carries a non-zero value — otherwise
+every play would be saved with `durationMs = 0` and `skipped` would always be `false`.
 
 ### Album art resolution (`resolveArtUri`)
 Priority chain:
@@ -184,3 +188,4 @@ adapt to dark/light automatically.
 | `d0553bb` | Fix .gitignore: ignore root .idea/ |
 | `bf8f60d` | Album art support (Coil, artUri, bitmap fallback, stats thumbnail) |
 | `7c2d5ec` | Design system: Barlow fonts, custom color scheme, rank format, top-20 limit, TopAppBar collapse fix |
+| `e20eb4b` | Fix skip detection: update durationMs inside duplicate guard when second metadata event carries real value |

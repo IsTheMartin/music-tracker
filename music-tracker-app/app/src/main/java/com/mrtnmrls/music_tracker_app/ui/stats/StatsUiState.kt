@@ -4,7 +4,7 @@ import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 
 sealed interface StatsUiState {
-    object Loading: StatsUiState
+    data object Loading: StatsUiState
     data class Success(
         val selectedMonth: SelectedMonth,
         val topArtists: List<ArtistStat>,

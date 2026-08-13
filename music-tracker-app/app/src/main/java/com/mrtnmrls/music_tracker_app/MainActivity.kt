@@ -26,26 +26,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MusicTrackerAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
-                    AppNavigation(startDestination = startDestination(hasPermission))
-                }
+                AppNavigation(startDestination = startDestination(hasPermission))
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MusicTrackerAppTheme {
-        Greeting("Android")
     }
 }
