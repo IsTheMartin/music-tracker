@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Tracks songs you play on YouTube Music",
   "permissions": ["storage", "unlimitedStorage"],
-  "host_permissions": ["*://music.youtube.com/*"],
+  "host_permissions": ["*://music.youtube.com/*", "*://*.supabase.co/*"],
   "background": {
     "service_worker": "src/background/index.ts",
     "type": "module"

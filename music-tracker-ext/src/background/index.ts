@@ -1,5 +1,16 @@
 import type { Play, ArtistStat, SongStat, StatsResult } from '../shared/types';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+async function getDeviceId(): Promise<string> {
+  const data = (await chrome.storage.local.get('device_id')) as { device_id?: string };
+  if (data.device_id) return data.device_id;
+  const id = crypto.randomUUID();
+  await chrome.storage.local.set({ device_id: id });
+  return id;
+}
+
 async function getPlays(): Promise<Play[]> {
   const data = (await chrome.storage.local.get('plays')) as { plays?: Play[] };
   return data.plays ?? [];
@@ -7,8 +18,35 @@ async function getPlays(): Promise<Play[]> {
 
 async function handleSavePlay(play: Omit<Play, 'id'>): Promise<void> {
   const plays = await getPlays();
-  plays.push({ ...play, id: Date.now() });
+  const newPlay: Play = { ...play, id: Date.now() };
+  plays.push(newPlay);
   await chrome.storage.local.set({ plays });
+
+  const deviceId = await getDeviceId();
+  fetch(`${SUPABASE_URL}/rest/v1/plays`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({
+      device_id: deviceId,
+      title: newPlay.title,
+      artist: newPlay.artist,
+      album: newPlay.album,
+      art_uri: newPlay.artUri,
+      duration_ms: newPlay.durationMs,
+      listened_ms: newPlay.listenedMs,
+      started_at: newPlay.startedAt,
+      ended_at: newPlay.endedAt,
+      skipped: newPlay.skipped,
+      source_package: newPlay.sourcePackage,
+    }),
+  }).then((res) => {
+    if (!res.ok) res.text().then((t) => console.warn('[YTM] Supabase sync failed:', t));
+  }).catch((err) => console.warn('[YTM] Supabase sync error:', err));
 }
 
 function toMonthStr(ts: number): string {
