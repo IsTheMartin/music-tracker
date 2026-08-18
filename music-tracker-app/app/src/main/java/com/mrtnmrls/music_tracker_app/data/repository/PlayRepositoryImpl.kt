@@ -2,15 +2,20 @@ package com.mrtnmrls.music_tracker_app.data.repository
 
 import com.mrtnmrls.music_tracker_app.data.local.dao.PlayDao
 import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
+import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
 import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
 import kotlinx.coroutines.flow.Flow
 
-class PlayRepositoryImpl(private val playDao: PlayDao) : PlayRepository {
+class PlayRepositoryImpl(
+    private val playDao: PlayDao,
+    private val syncManager: SyncManager
+) : PlayRepository {
     override suspend fun save(play: Play) {
         playDao.insert(play.toEntity())
+        syncManager.syncPending()
     }
 
     override fun topArtists(

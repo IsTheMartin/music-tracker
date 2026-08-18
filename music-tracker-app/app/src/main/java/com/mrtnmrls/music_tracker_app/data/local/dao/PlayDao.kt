@@ -51,4 +51,14 @@ interface PlayDao {
         includedSkipped: Boolean,
         limit: Int
     ): Flow<List<SongStat>>
+
+    @Query("""
+        SELECT * FROM plays
+        WHERE synced = 0
+        ORDER BY startedAt
+    """)
+    suspend fun getAllUnsyncedPlays(): List<PlayEntity>
+
+    @Query("UPDATE plays SET synced = 1 WHERE id IN (:ids)")
+    suspend fun markSynced(ids: List<Long>)
 }

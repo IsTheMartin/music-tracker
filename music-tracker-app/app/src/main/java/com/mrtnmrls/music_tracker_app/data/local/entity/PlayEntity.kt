@@ -16,4 +16,5 @@ data class PlayEntity(
     val endedAt: Long,
     val skipped: Boolean,
     val sourcePackage: String,
+    val synced: Boolean = false
 )

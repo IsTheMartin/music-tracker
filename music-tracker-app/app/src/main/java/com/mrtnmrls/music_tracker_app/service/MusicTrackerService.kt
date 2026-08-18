@@ -10,6 +10,8 @@ import android.net.Uri
 import android.service.notification.NotificationListenerService
 import android.util.Log
 import com.mrtnmrls.music_tracker_app.data.local.db.AppDatabase
+import com.mrtnmrls.music_tracker_app.data.remote.DeviceIdProvider
+import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
 import com.mrtnmrls.music_tracker_app.data.repository.PlayRepositoryImpl
 import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
@@ -26,7 +28,9 @@ import kotlin.getValue
 class MusicTrackerService : NotificationListenerService() {
 
     private val repository: PlayRepository by lazy {
-        PlayRepositoryImpl(AppDatabase.getInstance(this).playDao())
+        val playDao = AppDatabase.getInstance(this).playDao()
+        val syncManager = SyncManager(playDao, DeviceIdProvider.getOrCreate(this))
+        PlayRepositoryImpl(playDao, syncManager)
     }
 
     private var mediaSessionManager: MediaSessionManager? = null

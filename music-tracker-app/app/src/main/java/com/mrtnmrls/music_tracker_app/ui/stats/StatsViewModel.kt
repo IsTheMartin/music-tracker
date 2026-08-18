@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mrtnmrls.music_tracker_app.data.local.db.AppDatabase
+import com.mrtnmrls.music_tracker_app.data.remote.DeviceIdProvider
+import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
 import com.mrtnmrls.music_tracker_app.data.repository.PlayRepositoryImpl
 import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
@@ -23,9 +25,11 @@ class StatsViewModel(app: Application): AndroidViewModel(app) {
     private val _uiState = MutableStateFlow<StatsUiState>(StatsUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    private val repository: PlayRepository = PlayRepositoryImpl(
-        AppDatabase.getInstance(app).playDao()
-    )
+    private val repository: PlayRepository by lazy {
+        val playDao = AppDatabase.getInstance(app).playDao()
+        val syncManager = SyncManager(playDao, DeviceIdProvider.getOrCreate(app))
+        PlayRepositoryImpl(playDao, syncManager)
+    }
 
     private var topListLimit = 20
     private var selectedMonth = SelectedMonth.current()
