@@ -8,7 +8,6 @@ export interface Play {
   listenedMs: number;
   startedAt: number;
   endedAt: number;
-  skipped: boolean;
   sourcePackage: string;
 }
 

@@ -46,6 +46,10 @@ function finalizePlay(): void {
   }
 
   const skipped = active.durationMs > 0 && listenedMs < SKIP_THRESHOLD * active.durationMs;
+  if (skipped) {
+    active = null;
+    return;
+  }
 
   window.postMessage(
     {
@@ -59,7 +63,6 @@ function finalizePlay(): void {
         listenedMs,
         startedAt: active.startedAt,
         endedAt,
-        skipped,
         sourcePackage: 'music.youtube.com',
       },
     },

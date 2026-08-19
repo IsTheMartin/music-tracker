@@ -3,6 +3,18 @@ import type { Play, ArtistStat, SongStat, StatsResult } from '../shared/types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
+type SupabasePlay = {
+  title: string;
+  artist: string;
+  album: string;
+  art_uri: string;
+  duration_ms: number;
+  listened_ms: number;
+  started_at: number;
+  ended_at: number;
+  source_package: string;
+};
+
 async function getDeviceId(): Promise<string> {
   const data = (await chrome.storage.local.get('device_id')) as { device_id?: string };
   if (data.device_id) return data.device_id;
@@ -14,6 +26,41 @@ async function getDeviceId(): Promise<string> {
 async function getPlays(): Promise<Play[]> {
   const data = (await chrome.storage.local.get('plays')) as { plays?: Play[] };
   return data.plays ?? [];
+}
+
+async function syncFromSupabase(): Promise<void> {
+  const cols = 'title,artist,album,art_uri,duration_ms,listened_ms,started_at,ended_at,source_package';
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/plays?select=${cols}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+    },
+  });
+  if (!res.ok) return;
+
+  const remotePlays = (await res.json()) as SupabasePlay[];
+  const localPlays = await getPlays();
+  const localStartedAts = new Set(localPlays.map((p) => p.startedAt));
+
+  const newPlays: Play[] = remotePlays
+    .filter((r) => !localStartedAts.has(r.started_at))
+    .map((r) => ({
+      id: r.started_at,
+      title: r.title,
+      artist: r.artist,
+      album: r.album,
+      artUri: r.art_uri,
+      durationMs: r.duration_ms,
+      listenedMs: r.listened_ms,
+      startedAt: r.started_at,
+      endedAt: r.ended_at,
+      sourcePackage: r.source_package,
+    }));
+
+  if (newPlays.length > 0) {
+    const merged = [...localPlays, ...newPlays].sort((a, b) => a.startedAt - b.startedAt);
+    await chrome.storage.local.set({ plays: merged });
+  }
 }
 
 async function handleSavePlay(play: Omit<Play, 'id'>): Promise<void> {
@@ -41,7 +88,6 @@ async function handleSavePlay(play: Omit<Play, 'id'>): Promise<void> {
       listened_ms: newPlay.listenedMs,
       started_at: newPlay.startedAt,
       ended_at: newPlay.endedAt,
-      skipped: newPlay.skipped,
       source_package: newPlay.sourcePackage,
     }),
   }).then((res) => {
@@ -55,8 +101,10 @@ function toMonthStr(ts: number): string {
 }
 
 async function handleGetStats(month: string): Promise<StatsResult> {
+  await syncFromSupabase().catch(() => {});
+
   const plays = await getPlays();
-  const filtered = plays.filter((p) => toMonthStr(p.startedAt) === month && !p.skipped);
+  const filtered = plays.filter((p) => toMonthStr(p.startedAt) === month);
 
   const artistMap = new Map<string, { count: number; artUri: string }>();
   const songMap = new Map<string, { count: number; artUri: string; artist: string }>();
