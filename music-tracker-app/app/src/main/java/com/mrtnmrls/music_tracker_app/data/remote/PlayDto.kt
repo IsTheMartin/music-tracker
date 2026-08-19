@@ -14,6 +14,5 @@ data class PlayDto(
     @SerialName("listened_ms") val listenedMs: Long,
     @SerialName("started_at") val startedAt: Long,
     @SerialName("ended_at") val endedAt: Long,
-    val skipped: Boolean,
     @SerialName("source_package") val sourcePackage: String,
 )

@@ -18,35 +18,19 @@ class PlayRepositoryImpl(
         syncManager.syncPending()
     }
 
-    override fun topArtists(
-        from: Long,
-        to: Long,
-        includedSkipped: Boolean,
-        limit: Int
-    ): Flow<List<ArtistStat>> = playDao.topArtists(
-        from = from,
-        to = to,
-        includedSkipped = includedSkipped,
-        limit = limit
-    )
+    override fun topArtists(from: Long, to: Long, limit: Int): Flow<List<ArtistStat>> =
+        playDao.topArtists(from = from, to = to, limit = limit)
 
-    override fun topSongs(
-        from: Long,
-        to: Long,
-        includedSkipped: Boolean,
-        limit: Int
-    ): Flow<List<SongStat>> = playDao.topSongs(
-        from = from,
-        to = to,
-        includedSkipped = includedSkipped,
-        limit = limit
-    )
+    override fun topSongs(from: Long, to: Long, limit: Int): Flow<List<SongStat>> =
+        playDao.topSongs(from = from, to = to, limit = limit)
 
     override suspend fun getAllPlays(): List<Play> = playDao.getAllPlays().map { it.toDomain() }
 
     override suspend fun importPlays(plays: List<Play>) {
-        playDao.insertAll(plays.map { it.toEntity() })
+        playDao.insertAll(plays.map { play -> play.toEntity() })
     }
+
+    override suspend fun downloadAndMerge() = syncManager.downloadAndMerge()
 
     private fun Play.toEntity() = PlayEntity(
         id = id,
@@ -54,11 +38,11 @@ class PlayRepositoryImpl(
         artist = artist,
         album = album,
         artUri = artUri,
+        remoteArtUri = remoteArtUri,
         durationMs = durationMs,
         listenedMs = listenedMs,
         startedAt = startedAt,
         endedAt = endedAt,
-        skipped = skipped,
         sourcePackage = sourcePackage
     )
 
@@ -68,11 +52,11 @@ class PlayRepositoryImpl(
         artist = artist,
         album = album,
         artUri = artUri,
+        remoteArtUri = remoteArtUri,
         durationMs = durationMs,
         listenedMs = listenedMs,
         startedAt = startedAt,
         endedAt = endedAt,
-        skipped = skipped,
         sourcePackage = sourcePackage
     )
 }

@@ -47,6 +47,7 @@ class MusicTrackerService : NotificationListenerService() {
         val artist: String,
         val album: String,
         val artUri: String,
+        val remoteArtUri: String,
         val durationMs: Long,
         val startedAt: Long
     )
@@ -122,6 +123,7 @@ class MusicTrackerService : NotificationListenerService() {
         closeCurrentPlay()
 
         val album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM).orEmpty()
+        val remoteArtUri = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI).orEmpty()
         val artUri = resolveArtUri(metadata)
         val durationMs = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
@@ -131,6 +133,7 @@ class MusicTrackerService : NotificationListenerService() {
             artist = artist,
             album = album,
             artUri = artUri,
+            remoteArtUri = remoteArtUri,
             durationMs = durationMs,
             startedAt = System.currentTimeMillis()
         )
@@ -139,9 +142,6 @@ class MusicTrackerService : NotificationListenerService() {
     }
 
     private fun resolveArtUri(metadata: MediaMetadata): String {
-        val remoteUri = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI).orEmpty()
-        if (remoteUri.isNotEmpty()) return remoteUri
-
         val bitmap = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
             ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
             ?: return ""
@@ -246,11 +246,12 @@ class MusicTrackerService : NotificationListenerService() {
         pauseStartedAt = null
 
         val skipped = play.durationMs > 0 && listenedMs < SKIP_THRESHOLD * play.durationMs
+        if (skipped) {
+            Log.d(TAG, "Skipped: ${play.title} — listened ${listenedMs}ms / ${play.durationMs}ms, discarding")
+            return
+        }
 
-        Log.d(
-            TAG,
-            "Saving: ${play.title} — listened ${listenedMs}ms / ${play.durationMs}ms, skipped=$skipped"
-        )
+        Log.d(TAG, "Saving: ${play.title} — listened ${listenedMs}ms / ${play.durationMs}ms")
 
         scope.launch {
             repository.save(
@@ -259,11 +260,11 @@ class MusicTrackerService : NotificationListenerService() {
                     artist = play.artist,
                     album = play.album,
                     artUri = play.artUri,
+                    remoteArtUri = play.remoteArtUri,
                     durationMs = play.durationMs,
                     listenedMs = listenedMs,
                     startedAt = play.startedAt,
                     endedAt = System.currentTimeMillis(),
-                    skipped = skipped,
                     sourcePackage = YT_MUSIC_PACKAGE
                 )
             )

@@ -23,34 +23,22 @@ interface PlayDao {
     @Query("""
        SELECT artist, COUNT(*) AS playCount
         FROM plays
-        WHERE (:includedSkipped = 1 OR skipped = 0)
-        AND startedAt BETWEEN :from AND :to
+        WHERE startedAt BETWEEN :from AND :to
         GROUP BY artist
         ORDER BY playCount DESC
         LIMIT :limit
     """)
-    fun topArtists(
-        from: Long,
-        to: Long,
-        includedSkipped: Boolean,
-        limit: Int
-    ): Flow<List<ArtistStat>>
+    fun topArtists(from: Long, to: Long, limit: Int): Flow<List<ArtistStat>>
 
     @Query("""
        SELECT title, artist, COUNT(*) AS playCount, MAX(artUri) AS artUri
         FROM plays
-        WHERE (:includedSkipped = 1 OR skipped = 0)
-        AND startedAt BETWEEN :from AND :to
+        WHERE startedAt BETWEEN :from AND :to
         GROUP BY title, artist
         ORDER BY playCount DESC
         LIMIT :limit
     """)
-    fun topSongs(
-        from: Long,
-        to: Long,
-        includedSkipped: Boolean,
-        limit: Int
-    ): Flow<List<SongStat>>
+    fun topSongs(from: Long, to: Long, limit: Int): Flow<List<SongStat>>
 
     @Query("""
         SELECT * FROM plays
@@ -61,4 +49,10 @@ interface PlayDao {
 
     @Query("UPDATE plays SET synced = 1 WHERE id IN (:ids)")
     suspend fun markSynced(ids: List<Long>)
+
+    @Query("SELECT startedAt FROM plays")
+    suspend fun getAllStartedAts(): List<Long>
+
+    @Query("UPDATE plays SET artUri = :artUri WHERE startedAt = :startedAt")
+    suspend fun updateArtUri(startedAt: Long, artUri: String)
 }

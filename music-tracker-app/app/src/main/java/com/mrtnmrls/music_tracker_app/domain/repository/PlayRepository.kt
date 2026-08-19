@@ -7,8 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface PlayRepository {
     suspend fun save(play: Play)
-    fun topArtists(from: Long, to: Long, includedSkipped: Boolean = false, limit: Int = 20): Flow<List<ArtistStat>>
-    fun topSongs(from: Long, to: Long, includedSkipped: Boolean = false, limit: Int = 20): Flow<List<SongStat>>
+    fun topArtists(from: Long, to: Long, limit: Int = 20): Flow<List<ArtistStat>>
+    fun topSongs(from: Long, to: Long, limit: Int = 20): Flow<List<SongStat>>
     suspend fun getAllPlays(): List<Play>
     suspend fun importPlays(plays: List<Play>)
+    suspend fun downloadAndMerge()
 }

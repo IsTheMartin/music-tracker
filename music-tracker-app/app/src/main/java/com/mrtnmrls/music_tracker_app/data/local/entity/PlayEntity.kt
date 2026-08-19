@@ -10,11 +10,11 @@ data class PlayEntity(
     val artist: String,
     val album: String,
     val artUri: String,
+    val remoteArtUri: String = "",
     val durationMs: Long,
     val listenedMs: Long,
     val startedAt: Long,
     val endedAt: Long,
-    val skipped: Boolean,
     val sourcePackage: String,
     val synced: Boolean = false
 )

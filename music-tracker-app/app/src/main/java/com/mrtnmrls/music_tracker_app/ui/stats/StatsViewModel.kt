@@ -2,6 +2,7 @@ package com.mrtnmrls.music_tracker_app.ui.stats
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mrtnmrls.music_tracker_app.data.local.db.AppDatabase
@@ -16,12 +17,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
-class StatsViewModel(app: Application): AndroidViewModel(app) {
+class StatsViewModel(app: Application) : AndroidViewModel(app) {
+
+    companion object {
+        private const val TAG = "StatsViewModel"
+    }
     private val _uiState = MutableStateFlow<StatsUiState>(StatsUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
@@ -41,6 +45,10 @@ class StatsViewModel(app: Application): AndroidViewModel(app) {
 
     init {
         loadStats()
+        viewModelScope.launch {
+            runCatching { repository.downloadAndMerge() }
+                .onFailure { Log.e(TAG, "downloadAndMerge failed", it) }
+        }
     }
 
     fun handleIntent(intent: StatsIntent) {
@@ -117,11 +125,11 @@ class StatsViewModel(app: Application): AndroidViewModel(app) {
                 put("artist", play.artist)
                 put("album", play.album)
                 put("artUri", play.artUri)
+                put("remoteArtUri", play.remoteArtUri)
                 put("durationMs", play.durationMs)
                 put("listenedMs", play.listenedMs)
                 put("startedAt", play.startedAt)
                 put("endedAt", play.endedAt)
-                put("skipped", play.skipped)
                 put("sourcePackage", play.sourcePackage)
             })
         }
@@ -143,11 +151,11 @@ class StatsViewModel(app: Application): AndroidViewModel(app) {
                 artist = obj.getString("artist"),
                 album = obj.getString("album"),
                 artUri = obj.optString("artUri", ""),
+                remoteArtUri = obj.optString("remoteArtUri", ""),
                 durationMs = obj.getLong("durationMs"),
                 listenedMs = obj.getLong("listenedMs"),
                 startedAt = obj.getLong("startedAt"),
                 endedAt = obj.getLong("endedAt"),
-                skipped = obj.getBoolean("skipped"),
                 sourcePackage = obj.getString("sourcePackage")
             )
         }
