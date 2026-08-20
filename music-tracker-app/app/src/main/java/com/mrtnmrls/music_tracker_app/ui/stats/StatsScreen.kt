@@ -1,7 +1,5 @@
 package com.mrtnmrls.music_tracker_app.ui.stats
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
@@ -34,9 +30,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,9 +45,6 @@ import coil3.compose.AsyncImage
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import com.mrtnmrls.music_tracker_app.ui.theme.MusicTrackerAppTheme
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +79,7 @@ fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
                         if (uiState is StatsUiState.Success) {
                             MonthSelector(
                                 displayName = (uiState as StatsUiState.Success).selectedMonth.displayName(),
+                                isCurrentMonth = (uiState as StatsUiState.Success).selectedMonth.isCurrent(),
                                 onPrevious = { viewModel.handleIntent(StatsIntent.PreviousMonth) },
                                 onNext = { viewModel.handleIntent(StatsIntent.NextMonth) }
                             )
@@ -159,7 +151,12 @@ private fun SuccessContent(
 }
 
 @Composable
-private fun MonthSelector(displayName: String, onPrevious: () -> Unit, onNext: () -> Unit) {
+private fun MonthSelector(
+    displayName: String,
+    isCurrentMonth: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -167,7 +164,7 @@ private fun MonthSelector(displayName: String, onPrevious: () -> Unit, onNext: (
     ) {
         IconButton(onClick = onPrevious) { Text("‹") }
         Text(text = displayName, style = MaterialTheme.typography.headlineLarge)
-        IconButton(onClick = onNext) { Text("›") }
+        IconButton(onClick = onNext, enabled = !isCurrentMonth) { Text("›") }
     }
 }
 
@@ -299,7 +296,7 @@ private fun StatsWithDataPreview() {
 @Composable
 private fun MonthSelectorPreview() {
     MusicTrackerAppTheme {
-        MonthSelector(displayName = "August 2026", onPrevious = {}, onNext = {})
+        MonthSelector(displayName = "August 2026", isCurrentMonth = false, onPrevious = {}, onNext = {})
     }
 }
 

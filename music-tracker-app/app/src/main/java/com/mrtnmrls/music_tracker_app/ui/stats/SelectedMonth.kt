@@ -17,6 +17,11 @@ data class SelectedMonth(
         return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
     }
 
+    fun isCurrent(): Boolean {
+        val currentMonth = current()
+        return currentMonth.month == month && currentMonth.year == year
+    }
+
     fun toEpochRange(): Pair<Long, Long> {
         val cal = Calendar.getInstance()
         cal.set(year, month - 1, 1, 0, 0, 0)
