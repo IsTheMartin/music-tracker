@@ -73,18 +73,6 @@ fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
         scrollBehavior.state.heightOffset = 0f
     }
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        if (uri != null) viewModel.handleIntent(StatsIntent.ExportToUri(uri))
-    }
-
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) viewModel.handleIntent(StatsIntent.ImportFromUri(uri))
-    }
-
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -106,17 +94,6 @@ fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
                         }
                     }
                 },
-                actions = {
-                    ExportImportMenu(
-                        onExport = {
-                            val date = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
-                            exportLauncher.launch("yt-music-plays-$date.json")
-                        },
-                        onImport = {
-                            importLauncher.launch(arrayOf("application/json", "text/plain"))
-                        }
-                    )
-                },
                 scrollBehavior = scrollBehavior
             )
         }
@@ -124,34 +101,6 @@ fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
         StatsContent(
             uiState = uiState,
             modifier = Modifier.padding(innerPadding)
-        )
-    }
-}
-
-@Composable
-private fun ExportImportMenu(onExport: () -> Unit, onImport: () -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-
-    IconButton(onClick = { expanded = true }) {
-        Text("⋮", style = MaterialTheme.typography.headlineSmall)
-    }
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = { expanded = false }
-    ) {
-        DropdownMenuItem(
-            text = { Text("Export data") },
-            onClick = {
-                expanded = false
-                onExport()
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Import data") },
-            onClick = {
-                expanded = false
-                onImport()
-            }
         )
     }
 }

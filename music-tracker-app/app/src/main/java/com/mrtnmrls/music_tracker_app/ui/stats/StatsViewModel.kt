@@ -53,8 +53,6 @@ class StatsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun handleIntent(intent: StatsIntent) {
         when(intent) {
-            is StatsIntent.ExportToUri -> exportToUri(intent.uri)
-            is StatsIntent.ImportFromUri -> importFromUri(intent.uri)
             StatsIntent.NextMonth -> updateMonth { it.next() }
             StatsIntent.PreviousMonth -> updateMonth { it.previous() }
         }
@@ -81,83 +79,6 @@ class StatsViewModel(app: Application) : AndroidViewModel(app) {
                         topSongs = songs
                     )
                 }
-        }
-    }
-
-    private fun exportToUri(uri: Uri) {
-        viewModelScope.launch {
-            runCatching {
-                val plays = repository.getAllPlays()
-                val json = serializePlays(plays)
-                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
-                    stream.write(json.toByteArray(Charsets.UTF_8))
-                } ?: error("Could not open output stream")
-                plays.size
-            }.fold(
-                onSuccess = { count -> _events.emit("Exported $count plays successfully") },
-                onFailure = { _events.emit("Export failed: ${it.message}") }
-            )
-        }
-    }
-
-    private fun importFromUri(uri: Uri) {
-        viewModelScope.launch {
-            runCatching {
-                val json = getApplication<Application>().contentResolver.openInputStream(uri)?.use { stream ->
-                    stream.readBytes().toString(Charsets.UTF_8)
-                } ?: error("Could not open input stream")
-                val plays = deserializePlays(json)
-                repository.importPlays(plays)
-                plays.size
-            }.fold(
-                onSuccess = { count -> _events.emit("Imported $count plays successfully") },
-                onFailure = { _events.emit("Import failed: ${it.message}") }
-            )
-        }
-    }
-
-    private fun serializePlays(plays: List<Play>): String {
-        val array = JSONArray()
-        plays.forEach { play ->
-            array.put(JSONObject().apply {
-                put("id", play.id)
-                put("title", play.title)
-                put("artist", play.artist)
-                put("album", play.album)
-                put("artUri", play.artUri)
-                put("remoteArtUri", play.remoteArtUri)
-                put("durationMs", play.durationMs)
-                put("listenedMs", play.listenedMs)
-                put("startedAt", play.startedAt)
-                put("endedAt", play.endedAt)
-                put("sourcePackage", play.sourcePackage)
-            })
-        }
-        return JSONObject().apply {
-            put("version", 1)
-            put("exportedAt", System.currentTimeMillis())
-            put("plays", array)
-        }.toString(2)
-    }
-
-    private fun deserializePlays(json: String): List<Play> {
-        val root = JSONObject(json)
-        val array = root.getJSONArray("plays")
-        return List(array.length()) { i ->
-            val obj = array.getJSONObject(i)
-            Play(
-                id = obj.getLong("id"),
-                title = obj.getString("title"),
-                artist = obj.getString("artist"),
-                album = obj.getString("album"),
-                artUri = obj.optString("artUri", ""),
-                remoteArtUri = obj.optString("remoteArtUri", ""),
-                durationMs = obj.getLong("durationMs"),
-                listenedMs = obj.getLong("listenedMs"),
-                startedAt = obj.getLong("startedAt"),
-                endedAt = obj.getLong("endedAt"),
-                sourcePackage = obj.getString("sourcePackage")
-            )
         }
     }
 }
