@@ -29,8 +29,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "SUPABASE_URL", "\"${localProps["supabase_url"]}\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProps["anon_key"]}\"")
+        buildConfigField("String", "SUPABASE_URL", "\"${localProps.getProperty("supabase_url", "")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProps.getProperty("anon_key", "")}\"")
     }
 
     buildTypes {

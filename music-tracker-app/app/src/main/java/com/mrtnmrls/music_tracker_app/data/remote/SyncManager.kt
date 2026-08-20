@@ -25,11 +25,12 @@ class SyncManager(
     private val deviceId: String
 ) {
     suspend fun syncPending() {
+        val client = SupabaseClientProvider.client ?: return
         val unsyncedPlays = playDao.getAllUnsyncedPlays()
         if (unsyncedPlays.isEmpty()) return
 
         runCatching {
-            SupabaseClientProvider.client
+            client
                 .from("plays")
                 .insert(unsyncedPlays.map { it.toDto() })
         }.onSuccess {
@@ -38,13 +39,16 @@ class SyncManager(
     }
 
     suspend fun downloadAndMerge() {
-        val remotePlays = SupabaseClientProvider.client
+        val client = SupabaseClientProvider.client ?: return
+        val remotePlays = client
             .from("plays")
-            .select(Columns.list(
-                "title", "artist", "album", "art_uri",
-                "duration_ms", "listened_ms", "started_at", "ended_at",
-                "source_package"
-            ))
+            .select(
+                Columns.list(
+                    "title", "artist", "album", "art_uri",
+                    "duration_ms", "listened_ms", "started_at", "ended_at",
+                    "source_package"
+                )
+            )
             .decodeList<RemotePlayDto>()
 
         val localStartedAts = playDao.getAllStartedAts().toHashSet()
