@@ -9,6 +9,7 @@ interface PlayRepository {
     suspend fun save(play: Play)
     fun topArtists(from: Long, to: Long, limit: Int = 20): Flow<List<ArtistStat>>
     fun topSongs(from: Long, to: Long, limit: Int = 20): Flow<List<SongStat>>
+    fun totalPlays(from: Long, to: Long): Flow<Int>
     suspend fun getAllPlays(): List<Play>
     suspend fun importPlays(plays: List<Play>)
     suspend fun downloadAndMerge()

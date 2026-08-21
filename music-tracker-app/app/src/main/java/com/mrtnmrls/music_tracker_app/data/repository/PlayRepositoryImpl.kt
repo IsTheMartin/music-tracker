@@ -24,6 +24,9 @@ class PlayRepositoryImpl(
     override fun topSongs(from: Long, to: Long, limit: Int): Flow<List<SongStat>> =
         playDao.topSongs(from = from, to = to, limit = limit)
 
+    override fun totalPlays(from: Long, to: Long): Flow<Int> =
+        playDao.totalPlays(from = from, to = to)
+
     override suspend fun getAllPlays(): List<Play> = playDao.getAllPlays().map { it.toDomain() }
 
     override suspend fun importPlays(plays: List<Play>) {

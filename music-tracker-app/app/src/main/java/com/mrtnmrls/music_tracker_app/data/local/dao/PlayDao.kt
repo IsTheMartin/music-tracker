@@ -41,6 +41,12 @@ interface PlayDao {
     fun topSongs(from: Long, to: Long, limit: Int): Flow<List<SongStat>>
 
     @Query("""
+        SELECT COUNT(*) FROM plays
+        WHERE startedAt BETWEEN :from AND :to
+    """)
+    fun totalPlays(from: Long, to: Long): Flow<Int>
+
+    @Query("""
         SELECT * FROM plays
         WHERE synced = 0
         ORDER BY startedAt

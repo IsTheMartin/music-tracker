@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
@@ -48,9 +49,13 @@ import com.mrtnmrls.music_tracker_app.ui.theme.MusicTrackerAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
+fun StatsScreen(
+    onOpenWrapped: () -> Unit,
+    viewModel: StatsViewModel = viewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -86,6 +91,17 @@ fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
                         }
                     }
                 },
+                actions = {
+                    IconButton(
+                        onClick = onOpenWrapped
+                    ) {
+                        Text(
+                            text = "+",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
                 scrollBehavior = scrollBehavior
             )
         }
@@ -108,6 +124,7 @@ private fun StatsContent(
                 CircularProgressIndicator()
             }
         }
+
         is StatsUiState.Success -> {
             SuccessContent(state = uiState, modifier = modifier)
         }
@@ -296,7 +313,11 @@ private fun StatsWithDataPreview() {
 @Composable
 private fun MonthSelectorPreview() {
     MusicTrackerAppTheme {
-        MonthSelector(displayName = "August 2026", isCurrentMonth = false, onPrevious = {}, onNext = {})
+        MonthSelector(
+            displayName = "August 2026",
+            isCurrentMonth = false,
+            onPrevious = {},
+            onNext = {})
     }
 }
 
@@ -315,7 +336,13 @@ private fun StatRowArtistPreview() {
 private fun StatRowSongPreview() {
     MusicTrackerAppTheme {
         Surface {
-            StatRow(rank = 1, primary = "Blinding Lights", secondary = "The Weeknd", artUri = null, playCount = 5)
+            StatRow(
+                rank = 1,
+                primary = "Blinding Lights",
+                secondary = "The Weeknd",
+                artUri = null,
+                playCount = 5
+            )
         }
     }
 }
