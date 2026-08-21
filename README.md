@@ -2,13 +2,23 @@
 
 Tracks songs you play on YouTube Music — on Android and in the browser — with monthly top-artists and top-songs stats.
 
+## Screenshots
+
+<p>
+  <img src="docs/screenshots/top-artists.jpg" width="200" alt="Stats — Top Artists" />
+  <img src="docs/screenshots/top-songs.jpg" width="200" alt="Stats — Top Songs" />
+  <img src="docs/screenshots/wrapped-intro.jpg" width="200" alt="Wrapped — intro" />
+  <img src="docs/screenshots/wrapped-top-artists.jpg" width="200" alt="Wrapped — Top Artists" />
+  <img src="docs/screenshots/wrapped-top-songs.jpg" width="200" alt="Wrapped — Top Songs" />
+  <img src="docs/screenshots/wrapped-outro.jpg" width="200" alt="Wrapped — outro" />
+</p>
+
 ## Monorepo structure
 
 ```
 music-tracker/
-├── music-tracker-app/   # Phase 1 — Android app
-├── music-tracker-ext/   # Phase 2 — Chrome / Brave extension
-└── (phase 3 — Supabase sync backend, coming soon)
+├── music-tracker-app/   # Phase 1 — Android app + Phase 3 — Supabase sync
+└── music-tracker-ext/   # Phase 2 — Chrome / Brave extension
 ```
 
 ---
