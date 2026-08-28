@@ -6,6 +6,7 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import javax.inject.Inject
 
 @Serializable
 internal data class RemotePlayDto(
@@ -20,9 +21,9 @@ internal data class RemotePlayDto(
     @SerialName("source_package") val sourcePackage: String,
 )
 
-class SyncManager(
+class SyncManager @Inject constructor(
     private val playDao: PlayDao,
-    private val deviceId: String
+    private val deviceIdProvider: DeviceIdProvider
 ) {
     suspend fun syncPending() {
         val client = SupabaseClientProvider.client ?: return
@@ -66,7 +67,7 @@ class SyncManager(
     }
 
     private fun PlayEntity.toDto(): PlayDto = PlayDto(
-        deviceId = deviceId,
+        deviceId = deviceIdProvider.deviceId,
         title = title,
         artist = artist,
         album = album,

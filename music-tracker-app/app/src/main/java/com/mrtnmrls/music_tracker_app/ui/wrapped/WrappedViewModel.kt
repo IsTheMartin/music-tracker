@@ -1,20 +1,20 @@
 package com.mrtnmrls.music_tracker_app.ui.wrapped
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mrtnmrls.music_tracker_app.data.local.db.AppDatabase
-import com.mrtnmrls.music_tracker_app.data.remote.DeviceIdProvider
-import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
-import com.mrtnmrls.music_tracker_app.data.repository.PlayRepositoryImpl
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
 import com.mrtnmrls.music_tracker_app.ui.stats.SelectedMonth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class WrappedViewModel(app: Application) : AndroidViewModel(app) {
+@HiltViewModel
+class WrappedViewModel @Inject constructor(
+    private val repository: PlayRepository
+) : ViewModel() {
 
     companion object {
         private const val TOP_LIMIT = 5
@@ -22,12 +22,6 @@ class WrappedViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _uiState = MutableStateFlow<WrappedUiState>(WrappedUiState.Loading)
     val uiState = _uiState.asStateFlow()
-
-    private val repository: PlayRepository by lazy {
-        val playDao = AppDatabase.getInstance(app).playDao()
-        val syncManager = SyncManager(playDao, DeviceIdProvider.getOrCreate(app))
-        PlayRepositoryImpl(playDao, syncManager)
-    }
 
     init {
         val month = SelectedMonth.current()

@@ -8,8 +8,9 @@ import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class PlayRepositoryImpl(
+class PlayRepositoryImpl @Inject constructor(
     private val playDao: PlayDao,
     private val syncManager: SyncManager
 ) : PlayRepository {

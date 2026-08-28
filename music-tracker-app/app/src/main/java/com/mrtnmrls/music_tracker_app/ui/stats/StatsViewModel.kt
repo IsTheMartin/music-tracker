@@ -1,16 +1,10 @@
 package com.mrtnmrls.music_tracker_app.ui.stats
 
-import android.app.Application
-import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mrtnmrls.music_tracker_app.data.local.db.AppDatabase
-import com.mrtnmrls.music_tracker_app.data.remote.DeviceIdProvider
-import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
-import com.mrtnmrls.music_tracker_app.data.repository.PlayRepositoryImpl
-import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,22 +12,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
+import javax.inject.Inject
 
-class StatsViewModel(app: Application) : AndroidViewModel(app) {
+@HiltViewModel
+class StatsViewModel @Inject constructor(
+    private val repository: PlayRepository
+) : ViewModel() {
 
     companion object {
         private const val TAG = "StatsViewModel"
     }
     private val _uiState = MutableStateFlow<StatsUiState>(StatsUiState.Loading)
     val uiState = _uiState.asStateFlow()
-
-    private val repository: PlayRepository by lazy {
-        val playDao = AppDatabase.getInstance(app).playDao()
-        val syncManager = SyncManager(playDao, DeviceIdProvider.getOrCreate(app))
-        PlayRepositoryImpl(playDao, syncManager)
-    }
 
     private var topListLimit = 20
     private var selectedMonth = SelectedMonth.current()

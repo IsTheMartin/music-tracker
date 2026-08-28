@@ -9,12 +9,9 @@ import android.media.session.PlaybackState
 import android.net.Uri
 import android.service.notification.NotificationListenerService
 import android.util.Log
-import com.mrtnmrls.music_tracker_app.data.local.db.AppDatabase
-import com.mrtnmrls.music_tracker_app.data.remote.DeviceIdProvider
-import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
-import com.mrtnmrls.music_tracker_app.data.repository.PlayRepositoryImpl
 import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,15 +20,13 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlin.getValue
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MusicTrackerService : NotificationListenerService() {
 
-    private val repository: PlayRepository by lazy {
-        val playDao = AppDatabase.getInstance(this).playDao()
-        val syncManager = SyncManager(playDao, DeviceIdProvider.getOrCreate(this))
-        PlayRepositoryImpl(playDao, syncManager)
-    }
+    @Inject
+    lateinit var repository: PlayRepository
 
     private var mediaSessionManager: MediaSessionManager? = null
     private var mediaController: MediaController? = null
