@@ -2,6 +2,12 @@
 
 Tracks songs you play on YouTube Music — on Android and in the browser — with monthly top-artists and top-songs stats.
 
+## Demo
+
+<p>
+  <img src="docs/screenshots/demo.gif" width="200" alt="App demo" />
+</p>
+
 ## Screenshots
 
 <p>

@@ -7,8 +7,6 @@ import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
 
 @Database(entities = [PlayEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun playDao(): PlayDao
-
 
 }
