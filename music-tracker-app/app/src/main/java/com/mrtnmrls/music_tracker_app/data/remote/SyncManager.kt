@@ -2,6 +2,7 @@ package com.mrtnmrls.music_tracker_app.data.remote
 
 import com.mrtnmrls.music_tracker_app.data.local.dao.PlayDao
 import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
+import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
@@ -23,10 +24,11 @@ internal data class RemotePlayDto(
 
 class SyncManager @Inject constructor(
     private val playDao: PlayDao,
-    private val deviceIdProvider: DeviceIdProvider
+    private val deviceIdProvider: DeviceIdProvider,
+    private val supabaseClient: SupabaseClient?
 ) {
     suspend fun syncPending() {
-        val client = SupabaseClientProvider.client ?: return
+        val client = supabaseClient ?: return
         val unsyncedPlays = playDao.getAllUnsyncedPlays()
         if (unsyncedPlays.isEmpty()) return
 
@@ -40,7 +42,7 @@ class SyncManager @Inject constructor(
     }
 
     suspend fun downloadAndMerge() {
-        val client = SupabaseClientProvider.client ?: return
+        val client = supabaseClient ?: return
         val remotePlays = client
             .from("plays")
             .select(
