@@ -30,22 +30,10 @@ class MusicTrackerService : NotificationListenerService() {
 
     private var mediaSessionManager: MediaSessionManager? = null
     private var mediaController: MediaController? = null
-    private var activePlay: ActivePlay? = null
-
-    private var totalPausedMs: Long = 0L
-    private var pauseStartedAt: Long? = null
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    data class ActivePlay(
-        val title: String,
-        val artist: String,
-        val album: String,
-        val artUri: String,
-        val remoteArtUri: String,
-        val durationMs: Long,
-        val startedAt: Long
-    )
+    private val tracker = PlaybackTracker()
 
     private val sessionListener = MediaSessionManager.OnActiveSessionsChangedListener { sessions ->
         updateMediaController(sessions)
@@ -104,13 +92,9 @@ class MusicTrackerService : NotificationListenerService() {
         val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
             ?: run { closeCurrentPlay(); return }
 
-        if (activePlay?.title == title && activePlay?.artist == artist) {
+        if (tracker.isSameTrack(title, artist)) {
             val newDuration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
-            if (newDuration > 0 && activePlay?.durationMs != newDuration) {
-                activePlay = activePlay?.copy(durationMs = newDuration)
-                Log.d(TAG, "Updated duration for '$title': ${newDuration}ms")
-            }
-            Log.d(TAG, "Duplicated metadata event for '$title', ignoring")
+            tracker.updateDuration(newDuration)
             return
         }
 
@@ -123,7 +107,8 @@ class MusicTrackerService : NotificationListenerService() {
         val durationMs = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
         Log.d(TAG, "Now playing: $title - $artist ($album) [${durationMs}ms]")
-        activePlay = ActivePlay(
+
+        val track = ActiveTrack(
             title = title,
             artist = artist,
             album = album,
@@ -132,8 +117,7 @@ class MusicTrackerService : NotificationListenerService() {
             durationMs = durationMs,
             startedAt = System.currentTimeMillis()
         )
-        totalPausedMs = 0L
-        pauseStartedAt = null
+        tracker.startTrack(track)
     }
 
     private fun resolveArtUri(metadata: MediaMetadata): String {
@@ -212,17 +196,12 @@ class MusicTrackerService : NotificationListenerService() {
         state ?: return
         when (state.state) {
             PlaybackState.STATE_PLAYING -> {
-                pauseStartedAt?.let { paused ->
-                    totalPausedMs += System.currentTimeMillis() - paused
-                    pauseStartedAt = null
-                }
-                Log.d(TAG, "Playback resumed (total paused so far: ${totalPausedMs}ms)")
+                tracker.onPlaying(System.currentTimeMillis())
             }
 
             PlaybackState.STATE_PAUSED,
             PlaybackState.STATE_STOPPED -> {
-                if (pauseStartedAt == null) pauseStartedAt = System.currentTimeMillis()
-                Log.d(TAG, "Playback paused/stopped")
+                tracker.onPaused(System.currentTimeMillis())
             }
 
             else -> Unit
@@ -230,36 +209,33 @@ class MusicTrackerService : NotificationListenerService() {
     }
 
     private fun closeCurrentPlay() {
-        val play = activePlay ?: return
-        activePlay = null
+        val closedPlay = tracker.closeTrack(System.currentTimeMillis(), SKIP_THRESHOLD) ?: return
 
-        val ongoingPauseMs = pauseStartedAt?.let { System.currentTimeMillis() - it } ?: 0L
-        val listenedMs =
-            (System.currentTimeMillis() - play.startedAt - totalPausedMs - ongoingPauseMs)
-                .coerceAtLeast(0L)
-        totalPausedMs = 0L
-        pauseStartedAt = null
-
-        val skipped = play.durationMs > 0 && listenedMs < SKIP_THRESHOLD * play.durationMs
-        if (skipped) {
-            Log.d(TAG, "Skipped: ${play.title} — listened ${listenedMs}ms / ${play.durationMs}ms, discarding")
+        if (closedPlay.skipped) {
+            Log.d(
+                TAG,
+                "Skipped: ${closedPlay.title} — listened ${closedPlay.listenedMs}ms / ${closedPlay.durationMs}ms, discarding"
+            )
             return
         }
 
-        Log.d(TAG, "Saving: ${play.title} — listened ${listenedMs}ms / ${play.durationMs}ms")
+        Log.d(
+            TAG,
+            "Saving: ${closedPlay.title} — listened ${closedPlay.listenedMs}ms / ${closedPlay.durationMs}ms"
+        )
 
         scope.launch {
             repository.save(
                 Play(
-                    title = play.title,
-                    artist = play.artist,
-                    album = play.album,
-                    artUri = play.artUri,
-                    remoteArtUri = play.remoteArtUri,
-                    durationMs = play.durationMs,
-                    listenedMs = listenedMs,
-                    startedAt = play.startedAt,
-                    endedAt = System.currentTimeMillis(),
+                    title = closedPlay.title,
+                    artist = closedPlay.artist,
+                    album = closedPlay.album,
+                    artUri = closedPlay.artUri,
+                    remoteArtUri = closedPlay.remoteArtUri,
+                    durationMs = closedPlay.durationMs,
+                    listenedMs = closedPlay.listenedMs,
+                    startedAt = closedPlay.startedAt,
+                    endedAt = closedPlay.endedAt,
                     sourcePackage = YT_MUSIC_PACKAGE
                 )
             )
