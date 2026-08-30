@@ -1,4 +1,4 @@
-package com.mrtnmrls.music_tracker_app.ui.stats
+package com.mrtnmrls.music_tracker_app.domain.model
 
 import android.icu.util.Calendar
 import java.text.SimpleDateFormat

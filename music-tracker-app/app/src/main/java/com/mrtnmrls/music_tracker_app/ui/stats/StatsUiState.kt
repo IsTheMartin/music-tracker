@@ -1,6 +1,7 @@
 package com.mrtnmrls.music_tracker_app.ui.stats
 
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
+import com.mrtnmrls.music_tracker_app.domain.model.SelectedMonth
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 
 sealed interface StatsUiState {

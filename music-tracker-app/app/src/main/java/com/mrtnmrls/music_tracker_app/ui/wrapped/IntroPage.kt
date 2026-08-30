@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mrtnmrls.music_tracker_app.ui.stats.SelectedMonth
+import com.mrtnmrls.music_tracker_app.domain.model.SelectedMonth
 import com.mrtnmrls.music_tracker_app.ui.theme.MusicTrackerAppTheme
 
 @Composable

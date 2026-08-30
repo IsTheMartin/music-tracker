@@ -2,7 +2,7 @@ package com.mrtnmrls.music_tracker_app.ui.wrapped
 
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
-import com.mrtnmrls.music_tracker_app.ui.stats.SelectedMonth
+import com.mrtnmrls.music_tracker_app.domain.model.SelectedMonth
 
 sealed interface WrappedUiState {
     data object Loading : WrappedUiState
