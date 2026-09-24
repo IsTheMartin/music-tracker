@@ -36,6 +36,8 @@ class PlayRepositoryImpl @Inject constructor(
 
     override suspend fun downloadAndMerge() = syncManager.downloadAndMerge()
 
+    override suspend fun reconcileSyncState() = syncManager.reconcileSyncState()
+
     private fun Play.toEntity() = PlayEntity(
         id = id,
         title = title,

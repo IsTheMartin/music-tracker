@@ -61,4 +61,7 @@ interface PlayDao {
 
     @Query("UPDATE plays SET artUri = :artUri WHERE startedAt = :startedAt")
     suspend fun updateArtUri(startedAt: Long, artUri: String)
+
+    @Query("UPDATE plays SET synced = 1 WHERE synced = 0 AND startedAt IN (:startedAts)")
+    suspend fun markSyncedByStartedAt(startedAts: List<Long>)
 }

@@ -40,9 +40,12 @@ class StatsViewModel @Inject constructor(
     init {
         loadStats()
         viewModelScope.launch {
-            runCatching { repository.downloadAndMerge() }
+            runCatching {
+                repository.downloadAndMerge()
+                repository.reconcileSyncState()
+            }
                 .onFailure {
-                    Log.e(TAG, "downloadAndMerge failed", it)
+                    Log.e(TAG, "sync failed", it)
                     _events.emit("Cannot synchronize from server")
                 }
         }

@@ -13,4 +13,5 @@ interface PlayRepository {
     suspend fun getAllPlays(): List<Play>
     suspend fun importPlays(plays: List<Play>)
     suspend fun downloadAndMerge()
+    suspend fun reconcileSyncState()
 }

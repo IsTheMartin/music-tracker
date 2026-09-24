@@ -28,17 +28,36 @@ async function getPlays(): Promise<Play[]> {
   return data.plays ?? [];
 }
 
-async function syncFromSupabase(): Promise<void> {
+async function fetchAllRemotePlays(): Promise<SupabasePlay[] | null> {
   const cols = 'title,artist,album,art_uri,duration_ms,listened_ms,started_at,ended_at,source_package';
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/plays?select=${cols}`, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-    },
-  });
-  if (!res.ok) return;
+  const pageSize = 1000;
+  const remotePlays: SupabasePlay[] = [];
+  let offset = 0;
 
-  const remotePlays = (await res.json()) as SupabasePlay[];
+  while (true) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/plays?select=${cols}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Range-Unit': 'items',
+        'Range': `${offset}-${offset + pageSize - 1}`,
+      },
+    });
+    if (!res.ok) return null;
+
+    const page = (await res.json()) as SupabasePlay[];
+    remotePlays.push(...page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return remotePlays;
+}
+
+async function syncFromSupabase(): Promise<void> {
+  const remotePlays = await fetchAllRemotePlays();
+  if (!remotePlays) return;
+
   const localPlays = await getPlays();
   const localStartedAts = new Set(localPlays.map((p) => p.startedAt));
 

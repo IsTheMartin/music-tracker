@@ -5,9 +5,14 @@ import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
+import kotlin.collections.plusAssign
 
 @Serializable
 internal data class RemotePlayDto(
@@ -22,37 +27,60 @@ internal data class RemotePlayDto(
     @SerialName("source_package") val sourcePackage: String,
 )
 
+@Serializable
+internal data class StartedAtDto(
+    @SerialName("started_at") val startedAt: Long
+)
+
 class SyncManager @Inject constructor(
     private val playDao: PlayDao,
     private val deviceIdProvider: DeviceIdProvider,
     private val supabaseClient: SupabaseClient?
 ) {
-    suspend fun syncPending() {
-        val client = supabaseClient ?: return
-        val unsyncedPlays = playDao.getAllUnsyncedPlays()
-        if (unsyncedPlays.isEmpty()) return
 
-        runCatching {
-            client
-                .from("plays")
-                .insert(unsyncedPlays.map { it.toDto() })
-        }.onSuccess {
-            playDao.markSynced(unsyncedPlays.map { it.id })
+    private val syncMutex = Mutex()
+
+    suspend fun syncPending() {
+        syncMutex.withLock {
+            val client = supabaseClient ?: return
+            val unsyncedPlays = playDao.getAllUnsyncedPlays()
+            if (unsyncedPlays.isEmpty()) return
+
+            runCatching {
+                client
+                    .from("plays")
+                    .insert(unsyncedPlays.map { it.toDto() })
+            }.onSuccess {
+                withContext(NonCancellable) {
+                    playDao.markSynced(unsyncedPlays.map { it.id })
+                }
+            }
         }
     }
 
     suspend fun downloadAndMerge() {
         val client = supabaseClient ?: return
-        val remotePlays = client
-            .from("plays")
-            .select(
-                Columns.list(
-                    "title", "artist", "album", "art_uri",
-                    "duration_ms", "listened_ms", "started_at", "ended_at",
-                    "source_package"
-                )
-            )
-            .decodeList<RemotePlayDto>()
+        val pageSize = 1000L
+        val remotePlays = mutableListOf<RemotePlayDto>()
+        var offset = 0L
+
+        while(true) {
+            val page = client
+                .from("plays")
+                .select(
+                    Columns.list(
+                        "title", "artist", "album", "art_uri",
+                        "duration_ms", "listened_ms", "started_at", "ended_at",
+                        "source_package"
+                    )
+                ) {
+                    range(offset, offset + pageSize - 1)
+                }
+                .decodeList<RemotePlayDto>()
+            remotePlays += page
+            if (page.size < pageSize) break
+            offset += pageSize
+        }
 
         val localStartedAts = playDao.getAllStartedAts().toHashSet()
 
@@ -66,6 +94,30 @@ class SyncManager @Inject constructor(
         remotePlays
             .filter { it.startedAt in localStartedAts && !it.artUri.startsWith("file://") }
             .forEach { playDao.updateArtUri(it.startedAt, it.artUri) }
+    }
+
+    suspend fun reconcileSyncState() {
+        val client = supabaseClient ?: return
+        val pageSize = 1000L
+        val remoteStartedAts = mutableListOf<StartedAtDto>()
+        var offset = 0L
+
+        while(true) {
+            val page = client
+                .from("plays")
+                .select(
+                    Columns.list("started_at")
+                ) {
+                    filter { eq("device_id", deviceIdProvider.deviceId) }
+                    range(offset, offset + pageSize - 1)
+                }.decodeList<StartedAtDto>()
+
+            remoteStartedAts += page
+            if (page.size < pageSize) break
+            offset += pageSize
+        }
+
+        playDao.markSyncedByStartedAt(remoteStartedAts.map { it.startedAt })
     }
 
     private fun PlayEntity.toDto(): PlayDto = PlayDto(
