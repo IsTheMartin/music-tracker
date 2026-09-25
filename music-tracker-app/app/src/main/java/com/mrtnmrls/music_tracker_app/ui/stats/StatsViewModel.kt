@@ -1,12 +1,15 @@
 package com.mrtnmrls.music_tracker_app.ui.stats
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mrtnmrls.music_tracker_app.data.remote.SyncScheduler
 import com.mrtnmrls.music_tracker_app.domain.model.SelectedMonth
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
 import com.mrtnmrls.music_tracker_app.domain.usecase.GetMonthlyStatsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     private val repository: PlayRepository,
-    private val getMonthlyStatsUseCase: GetMonthlyStatsUseCase
+    private val getMonthlyStatsUseCase: GetMonthlyStatsUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     companion object {
@@ -41,6 +45,7 @@ class StatsViewModel @Inject constructor(
         loadStats()
         viewModelScope.launch {
             runCatching {
+                SyncScheduler.scheduleOne(context)
                 repository.downloadAndMerge()
                 repository.reconcileSyncState()
             }
