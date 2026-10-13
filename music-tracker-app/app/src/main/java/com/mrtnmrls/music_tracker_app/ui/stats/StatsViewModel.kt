@@ -79,7 +79,8 @@ class StatsViewModel @Inject constructor(
                     _uiState.value = StatsUiState.Success(
                         selectedMonth = selectedMonth,
                         topArtists = stats.topArtists,
-                        topSongs = stats.topSongs
+                        topSongs = stats.topSongs,
+                        heatMapActivity = stats.heatMapActivity
                     )
                 }
         }

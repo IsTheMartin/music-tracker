@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
+import com.mrtnmrls.music_tracker_app.domain.model.HeatMapActivity
 import com.mrtnmrls.music_tracker_app.domain.model.SelectedMonth
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import com.mrtnmrls.music_tracker_app.ui.theme.MusicTrackerAppTheme
@@ -137,6 +138,15 @@ private fun SuccessContent(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier.padding(horizontal = 16.dp)) {
+        item {
+            ListeningActivityCard(
+                selectedMonth = state.selectedMonth,
+                heatMapActivity = state.heatMapActivity
+            )
+        }
+
+        item { Spacer(modifier = Modifier.height(8.dp)) }
+
         item { SectionHeader("Top Artists") }
         if (state.topArtists.isEmpty()) {
             item { EmptyHint("No plays recorded this month.") }
@@ -147,7 +157,7 @@ private fun SuccessContent(
             }
         }
 
-        item { Spacer(modifier = Modifier.height(24.dp)) }
+        item { Spacer(modifier = Modifier.height(12.dp)) }
 
         item { SectionHeader("Top Songs") }
         if (state.topSongs.isEmpty()) {
@@ -268,7 +278,9 @@ private fun EmptyHint(message: String) {
 @Composable
 private fun StatsLoadingPreview() {
     MusicTrackerAppTheme {
-        StatsContent(uiState = StatsUiState.Loading)
+        Surface {
+            StatsContent(uiState = StatsUiState.Loading)
+        }
     }
 }
 
@@ -276,13 +288,21 @@ private fun StatsLoadingPreview() {
 @Composable
 private fun StatsEmptyPreview() {
     MusicTrackerAppTheme {
-        StatsContent(
-            uiState = StatsUiState.Success(
-                selectedMonth = SelectedMonth.current(),
-                topArtists = emptyList(),
-                topSongs = emptyList()
+        Surface {
+            StatsContent(
+                uiState = StatsUiState.Success(
+                    selectedMonth = SelectedMonth.current(),
+                    topArtists = emptyList(),
+                    topSongs = emptyList(),
+                    heatMapActivity = HeatMapActivity(
+                        playsPerDay = emptyList(),
+                        averagePlaysPerDay = 0f,
+                        startPeakHour = 0,
+                        endPeakHour = 0
+                    )
+                )
             )
-        )
+        }
     }
 }
 
@@ -290,21 +310,29 @@ private fun StatsEmptyPreview() {
 @Composable
 private fun StatsWithDataPreview() {
     MusicTrackerAppTheme {
-        StatsContent(
-            uiState = StatsUiState.Success(
-                selectedMonth = SelectedMonth.current(),
-                topArtists = listOf(
-                    ArtistStat("The Weeknd", 14),
-                    ArtistStat("Kendrick Lamar", 9),
-                    ArtistStat("Tyler, the Creator", 6)
-                ),
-                topSongs = listOf(
-                    SongStat("Blinding Lights", "The Weeknd", 5),
-                    SongStat("HUMBLE.", "Kendrick Lamar", 4),
-                    SongStat("See You Again", "Tyler, the Creator", 3)
+        Surface {
+            StatsContent(
+                uiState = StatsUiState.Success(
+                    selectedMonth = SelectedMonth.current(),
+                    topArtists = listOf(
+                        ArtistStat("The Weeknd", 14),
+                        ArtistStat("Kendrick Lamar", 9),
+                        ArtistStat("Tyler, the Creator", 6)
+                    ),
+                    topSongs = listOf(
+                        SongStat("Blinding Lights", "The Weeknd", 5),
+                        SongStat("HUMBLE.", "Kendrick Lamar", 4),
+                        SongStat("See You Again", "Tyler, the Creator", 3)
+                    ),
+                    heatMapActivity = HeatMapActivity(
+                        playsPerDay = emptyList(),
+                        averagePlaysPerDay = 0f,
+                        startPeakHour = 0,
+                        endPeakHour = 0
+                    )
                 )
             )
-        )
+        }
     }
 }
 
@@ -313,11 +341,13 @@ private fun StatsWithDataPreview() {
 @Composable
 private fun MonthSelectorPreview() {
     MusicTrackerAppTheme {
-        MonthSelector(
-            displayName = "August 2026",
-            isCurrentMonth = false,
-            onPrevious = {},
-            onNext = {})
+        Surface {
+            MonthSelector(
+                displayName = "August 2026",
+                isCurrentMonth = false,
+                onPrevious = {},
+                onNext = {})
+        }
     }
 }
 

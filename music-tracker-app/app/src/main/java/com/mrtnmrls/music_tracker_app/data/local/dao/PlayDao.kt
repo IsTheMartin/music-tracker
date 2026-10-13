@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
+import com.mrtnmrls.music_tracker_app.domain.model.DayPlayCount
+import com.mrtnmrls.music_tracker_app.domain.model.HourPlayCount
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import kotlinx.coroutines.flow.Flow
 
@@ -64,4 +66,26 @@ interface PlayDao {
 
     @Query("UPDATE plays SET synced = 1 WHERE synced = 0 AND startedAt IN (:startedAts)")
     suspend fun markSyncedByStartedAt(startedAts: List<Long>)
+
+    @Query("""
+        SELECT
+         CAST(strftime('%d', startedAt / 1000, 'unixepoch', 'localtime') AS INTEGER) AS day,
+         COUNT(*) AS playCount
+        FROM plays
+        WHERE startedAt BETWEEN :from AND :to
+        GROUP BY day
+        ORDER BY day
+    """)
+    fun playsByDay(from: Long, to: Long): Flow<List<DayPlayCount>>
+
+    @Query("""
+        SELECT
+         CAST(strftime('%H', startedAt / 1000, 'unixepoch', 'localtime') AS INTEGER) AS hour,
+         COUNT(*) AS playCount
+        FROM plays
+        WHERE startedAt BETWEEN :from AND :to
+        GROUP BY hour
+        ORDER BY hour
+    """)
+    fun playsByHour(from: Long, to: Long): Flow<List<HourPlayCount>>
 }

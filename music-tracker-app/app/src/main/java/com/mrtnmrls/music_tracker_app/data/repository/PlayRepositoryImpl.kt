@@ -4,6 +4,8 @@ import com.mrtnmrls.music_tracker_app.data.local.dao.PlayDao
 import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
 import com.mrtnmrls.music_tracker_app.data.remote.SyncManager
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
+import com.mrtnmrls.music_tracker_app.domain.model.DayPlayCount
+import com.mrtnmrls.music_tracker_app.domain.model.HourPlayCount
 import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import com.mrtnmrls.music_tracker_app.domain.repository.PlayRepository
@@ -37,6 +39,16 @@ class PlayRepositoryImpl @Inject constructor(
     override suspend fun downloadAndMerge() = syncManager.downloadAndMerge()
 
     override suspend fun reconcileSyncState() = syncManager.reconcileSyncState()
+
+    override fun playsByHour(
+        from: Long,
+        to: Long
+    ): Flow<List<HourPlayCount>> = playDao.playsByHour(from, to)
+
+    override fun playsByDay(
+        from: Long,
+        to: Long
+    ): Flow<List<DayPlayCount>> = playDao.playsByDay(from, to)
 
     private fun Play.toEntity() = PlayEntity(
         id = id,
