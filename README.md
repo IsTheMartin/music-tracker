@@ -31,7 +31,7 @@ music-tracker/
 
 ## Phase 1 — Android app
 
-Captures playback via `NotificationListenerService` + `MediaSessionManager`. Stores history in a local Room/SQLite database and shows monthly stats in a Jetpack Compose UI.
+Captures playback via `NotificationListenerService` + `MediaSessionManager`. Stores history in a local Room/SQLite database and shows monthly stats in a Jetpack Compose UI — top artists, top songs, and a GitHub-style daily heat map of listening activity with peak-hours detection.
 
 **Stack:** Kotlin · Jetpack Compose · Material3 · Room · Coroutines + Flow
 
