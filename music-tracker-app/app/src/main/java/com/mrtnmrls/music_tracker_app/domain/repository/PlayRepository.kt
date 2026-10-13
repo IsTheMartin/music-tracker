@@ -1,6 +1,8 @@
 package com.mrtnmrls.music_tracker_app.domain.repository
 
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
+import com.mrtnmrls.music_tracker_app.domain.model.DayPlayCount
+import com.mrtnmrls.music_tracker_app.domain.model.HourPlayCount
 import com.mrtnmrls.music_tracker_app.domain.model.Play
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 import kotlinx.coroutines.flow.Flow
@@ -14,4 +16,6 @@ interface PlayRepository {
     suspend fun importPlays(plays: List<Play>)
     suspend fun downloadAndMerge()
     suspend fun reconcileSyncState()
+    fun playsByHour(from: Long, to: Long): Flow<List<HourPlayCount>>
+    fun playsByDay(from: Long, to: Long): Flow<List<DayPlayCount>>
 }

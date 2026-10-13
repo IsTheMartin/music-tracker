@@ -1,6 +1,7 @@
 package com.mrtnmrls.music_tracker_app.ui.stats
 
 import com.mrtnmrls.music_tracker_app.domain.model.ArtistStat
+import com.mrtnmrls.music_tracker_app.domain.model.HeatMapActivity
 import com.mrtnmrls.music_tracker_app.domain.model.SelectedMonth
 import com.mrtnmrls.music_tracker_app.domain.model.SongStat
 
@@ -9,6 +10,7 @@ sealed interface StatsUiState {
     data class Success(
         val selectedMonth: SelectedMonth,
         val topArtists: List<ArtistStat>,
-        val topSongs: List<SongStat>
+        val topSongs: List<SongStat>,
+        val heatMapActivity: HeatMapActivity
     ): StatsUiState
 }

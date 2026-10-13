@@ -35,6 +35,18 @@ data class SelectedMonth(
         return start to cal.timeInMillis
     }
 
+    fun daysInMonth(): Int {
+        val cal = Calendar.getInstance()
+        cal.set(year, month - 1, 1, 0, 0, 0)
+        return cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+
+    fun elapsedDays(): Int = if (isCurrent()) {
+        Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+    } else {
+        daysInMonth()
+    }
+
     companion object {
         fun current(): SelectedMonth {
             val cal = Calendar.getInstance()
