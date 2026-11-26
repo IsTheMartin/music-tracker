@@ -48,6 +48,9 @@ class StatsViewModel @Inject constructor(
                     Log.e(TAG, "sync failed", it)
                     _events.emit("Cannot synchronize from server")
                 }
+            // Runs after downloadAndMerge so blank rows pulled from Supabase are purged too.
+            val deleted = repository.deleteBlankPlays()
+            if (deleted > 0) Log.d(TAG, "Deleted $deleted blank plays")
         }
     }
 

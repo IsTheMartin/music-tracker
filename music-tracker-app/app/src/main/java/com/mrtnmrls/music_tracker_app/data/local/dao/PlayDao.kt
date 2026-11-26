@@ -67,6 +67,9 @@ interface PlayDao {
     @Query("UPDATE plays SET synced = 1 WHERE synced = 0 AND startedAt IN (:startedAts)")
     suspend fun markSyncedByStartedAt(startedAts: List<Long>)
 
+    @Query("DELETE FROM plays WHERE TRIM(title) = ''")
+    suspend fun deleteBlankPlays(): Int
+
     @Query("""
         SELECT
          CAST(strftime('%d', startedAt / 1000, 'unixepoch', 'localtime') AS INTEGER) AS day,

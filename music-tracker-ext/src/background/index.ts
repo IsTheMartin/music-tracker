@@ -62,7 +62,7 @@ async function syncFromSupabase(): Promise<void> {
   const localStartedAts = new Set(localPlays.map((p) => p.startedAt));
 
   const newPlays: Play[] = remotePlays
-    .filter((r) => !localStartedAts.has(r.started_at))
+    .filter((r) => !localStartedAts.has(r.started_at) && !isBlankTitle(r.title))
     .map((r) => ({
       id: r.started_at,
       title: r.title,
@@ -79,6 +79,19 @@ async function syncFromSupabase(): Promise<void> {
   if (newPlays.length > 0) {
     const merged = [...localPlays, ...newPlays].sort((a, b) => a.startedAt - b.startedAt);
     await chrome.storage.local.set({ plays: merged });
+  }
+}
+
+function isBlankTitle(title: string): boolean {
+  return title.trim() === '';
+}
+
+// Removes blank plays the Android app saved before its blank-metadata fix.
+async function purgeBlankPlays(): Promise<void> {
+  const plays = await getPlays();
+  const cleaned = plays.filter((p) => !isBlankTitle(p.title));
+  if (cleaned.length !== plays.length) {
+    await chrome.storage.local.set({ plays: cleaned });
   }
 }
 
@@ -121,6 +134,7 @@ function toMonthStr(ts: number): string {
 
 async function handleGetStats(month: string): Promise<StatsResult> {
   await syncFromSupabase().catch(() => {});
+  await purgeBlankPlays();
 
   const plays = await getPlays();
   const filtered = plays.filter((p) => toMonthStr(p.startedAt) === month);

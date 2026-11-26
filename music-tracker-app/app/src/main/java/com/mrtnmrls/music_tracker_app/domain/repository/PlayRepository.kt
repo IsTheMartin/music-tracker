@@ -16,6 +16,7 @@ interface PlayRepository {
     suspend fun importPlays(plays: List<Play>)
     suspend fun downloadAndMerge()
     suspend fun reconcileSyncState()
+    suspend fun deleteBlankPlays(): Int
     fun playsByHour(from: Long, to: Long): Flow<List<HourPlayCount>>
     fun playsByDay(from: Long, to: Long): Flow<List<DayPlayCount>>
 }
