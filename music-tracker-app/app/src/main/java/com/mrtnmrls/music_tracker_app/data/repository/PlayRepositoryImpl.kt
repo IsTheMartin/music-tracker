@@ -40,6 +40,8 @@ class PlayRepositoryImpl @Inject constructor(
 
     override suspend fun reconcileSyncState() = syncManager.reconcileSyncState()
 
+    override suspend fun deleteBlankPlays(): Int = playDao.deleteBlankPlays()
+
     override fun playsByHour(
         from: Long,
         to: Long

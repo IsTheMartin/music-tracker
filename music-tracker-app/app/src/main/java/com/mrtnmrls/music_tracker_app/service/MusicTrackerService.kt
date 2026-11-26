@@ -92,6 +92,10 @@ class MusicTrackerService : NotificationListenerService() {
         val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
             ?: run { closeCurrentPlay(); return }
 
+        // YT Music emits blank metadata during track transitions. Starting a track from it
+        // would save an empty play: durationMs = 0 bypasses skip detection.
+        if (title.isBlank()) return
+
         if (tracker.isSameTrack(title, artist)) {
             val newDuration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
             tracker.updateDuration(newDuration)
@@ -244,7 +248,7 @@ class MusicTrackerService : NotificationListenerService() {
 
     companion object {
         const val YT_MUSIC_PACKAGE = "com.google.android.apps.youtube.music"
-        private const val SKIP_THRESHOLD = 0.2
+        private const val SKIP_THRESHOLD = 0.7
         private const val TAG = "MusicTrackerService"
     }
 }
