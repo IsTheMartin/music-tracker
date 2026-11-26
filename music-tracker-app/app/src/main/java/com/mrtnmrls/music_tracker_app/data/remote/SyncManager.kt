@@ -1,5 +1,6 @@
 package com.mrtnmrls.music_tracker_app.data.remote
 
+import android.util.Log
 import com.mrtnmrls.music_tracker_app.data.local.dao.PlayDao
 import com.mrtnmrls.music_tracker_app.data.local.entity.PlayEntity
 import io.github.jan.supabase.SupabaseClient
@@ -9,10 +10,12 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import kotlin.collections.plusAssign
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 internal data class RemotePlayDto(
@@ -47,13 +50,17 @@ class SyncManager @Inject constructor(
             if (unsyncedPlays.isEmpty()) return
 
             runCatching {
-                client
-                    .from("plays")
-                    .insert(unsyncedPlays.map { it.toDto() })
+                withTimeout(30.seconds) {
+                    client
+                        .from("plays")
+                        .insert(unsyncedPlays.map { it.toDto() })
+                }
             }.onSuccess {
                 withContext(NonCancellable) {
                     playDao.markSynced(unsyncedPlays.map { it.id })
                 }
+            }.onFailure { e ->
+                Log.e(TAG, "SyncPending failed", e)
             }
         }
     }
@@ -147,4 +154,8 @@ class SyncManager @Inject constructor(
         sourcePackage = sourcePackage,
         synced = true
     )
+
+    private companion object {
+        const val TAG = "SyncManager"
+    }
 }
